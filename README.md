@@ -1,73 +1,227 @@
-# React + TypeScript + Vite
+# 🤖 LangChain ChatBot Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive chat interface built with React, TypeScript, and Vite. This frontend application provides a ChatGPT-like experience with support for multiple conversation threads, file uploads, and real-time AI interactions.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 💬 **Multi-thread Conversations**: Create and manage multiple chat sessions
+- 🎨 **Modern UI**: Clean, responsive design with dark/light mode support
+- 📁 **File Upload**: Support for various file types (PDF, DOC, images, etc.)
+- 🔄 **Real-time Chat**: Live typing indicators and smooth message flow
+- 💾 **Local Storage**: Persistent conversation history
+- 🛡️ **Error Handling**: Robust error boundaries and retry mechanisms
+- 🌙 **Dark Mode**: Toggle between light and dark themes
+- 📱 **Responsive**: Works seamlessly on desktop and mobile devices
 
-## React Compiler
+## 🚀 Quick Start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Prerequisites
 
-## Expanding the ESLint configuration
+- Node.js 18+ 
+- npm or yarn
+- Backend API running (see Backend Setup)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Installation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd LangChain-ChatBot-Frontend
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+3. **Environment Configuration**
+   ```bash
+   # Copy environment template
+   cp .env.example .env
+   
+   # Edit .env with your configuration
+   VITE_API_BASE_URL=http://localhost:8000
+   VITE_APP_NAME=My ChatBot
+   VITE_API_TIMEOUT=10000
+   VITE_API_RETRY_ATTEMPTS=3
+   VITE_ENABLE_OFFLINE_MODE=true
+   ```
+
+4. **Start development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+5. **Open your browser**
+   Navigate to `http://localhost:5173`
+
+## 🏗️ Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── UI.tsx          # Main application component
+│   ├── ChatContainer.tsx
+│   ├── MessageList.tsx
+│   ├── ChatInput.tsx
+│   ├── Sidebar.tsx
+│   ├── ErrorScreen.tsx
+│   ├── EmptyState.tsx
+│   └── ErrorBoundary.tsx
+├── hooks/              # Custom React hooks
+│   ├── useAppState.ts
+│   ├── useThreads.ts
+│   ├── useMessages.ts
+│   ├── useDarkMode.ts
+│   └── useToast.ts
+├── services/           # API services
+│   └── api.ts
+├── types/              # TypeScript type definitions
+│   └── index.ts
+├── config/             # Configuration
+│   └── environment.ts
+├── utils/              # Utility functions
+│   └── index.ts
+└── styles/             # CSS styles
+    └── UI.css
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🔧 Configuration
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Environment Variables
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | Backend API URL | `http://127.0.0.1:8000` |
+| `VITE_APP_NAME` | Application name | `ChatGPT` |
+| `VITE_API_TIMEOUT` | API request timeout (ms) | `10000` |
+| `VITE_API_RETRY_ATTEMPTS` | Number of retry attempts | `3` |
+| `VITE_ENABLE_OFFLINE_MODE` | Enable offline functionality | `true` |
+
+### Backend Integration
+
+The frontend expects a backend API with the following endpoints:
+
+- `GET /health` - Health check
+- `POST /threads/{id}/messages` - Send message to AI
+
+## 🛠️ Development
+
+### Available Scripts
+
+```bash
+# Development
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+
+# Type checking
+npx tsc --noEmit     # Check TypeScript types
 ```
+
+### Code Quality
+
+- **ESLint**: Code linting with React and TypeScript rules
+- **TypeScript**: Full type safety
+- **Error Boundaries**: Comprehensive error handling
+- **Custom Hooks**: Reusable state logic
+
+## 🎨 UI Components
+
+### Main Components
+
+- **`UI`**: Main application container
+- **`ChatContainer`**: Chat interface with messages and input
+- **`Sidebar`**: Thread navigation and management
+- **`MessageList`**: Display conversation history
+- **`ChatInput`**: Message composition with file upload
+
+### State Management
+
+- **`useAppState`**: Main application state
+- **`useThreads`**: Thread management
+- **`useMessages`**: Message handling
+- **`useDarkMode`**: Theme management
+- **`useToast`**: Notification system
+
+## 🔄 API Integration
+
+### Error Handling
+
+- **Retry Mechanism**: Automatic retry on API failures
+- **Error Boundaries**: Catch and display React errors
+- **Toast Notifications**: User-friendly error messages
+- **Offline Mode**: Fallback when API is unavailable
+
+### Data Flow
+
+1. User sends message → `ChatInput`
+2. `useMessages` hook processes → API call
+3. AI response received → UI update
+4. Data persisted to localStorage
+
+## 📱 Responsive Design
+
+- **Mobile-first**: Optimized for mobile devices
+- **Breakpoints**: Responsive layout for all screen sizes
+- **Touch-friendly**: Mobile-optimized interactions
+- **Accessibility**: ARIA labels and keyboard navigation
+
+## 🚀 Deployment
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+The build artifacts will be stored in the `dist/` directory.
+
+### Environment Setup
+
+1. Set production environment variables
+2. Configure your backend API URL
+3. Deploy the `dist/` folder to your hosting service
+
+### Recommended Hosting
+
+- **Vercel**: Easy deployment with Vite support
+- **Netlify**: Static site hosting
+- **AWS S3 + CloudFront**: Scalable hosting
+- **GitHub Pages**: Free hosting for open source
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+If you encounter any issues or have questions:
+
+1. Check the [Issues](https://github.com/your-repo/issues) page
+2. Create a new issue with detailed information
+3. Include error messages and steps to reproduce
+
+## 🙏 Acknowledgments
+
+- Built with [React](https://reactjs.org/)
+- Powered by [Vite](https://vitejs.dev/)
+- Styled with modern CSS
+- Type-safe with [TypeScript](https://www.typescriptlang.org/)
+
+---
+
+Made with ❤️ for the AI community
