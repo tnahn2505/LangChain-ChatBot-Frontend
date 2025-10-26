@@ -1,4 +1,4 @@
-// API service để kết nối với backend
+// Frontend API Client - chỉ gọi Backend APIs
 import { config } from '../config/environment';
 
 const API_BASE_URL = config.API_BASE_URL;
@@ -63,9 +63,9 @@ export interface Message {
   files?: File[];
 }
 
-// API functions with enhanced error handling
+// Frontend API Client - chỉ gọi Backend APIs
 export const api = {
-  // Health check with retry mechanism
+  // Health check - gọi Backend API
   async health(retries: number = config.API_RETRY_ATTEMPTS): Promise<{ ok: boolean }> {
     for (let i = 0; i < retries; i++) {
       try {
@@ -78,15 +78,22 @@ export const api = {
     throw new ApiError('Health check failed after retries');
   },
 
-  // Tạo thread mới (local only - backend không có API này)
+  // Tạo thread mới - gọi Backend API
   async createThread(title: string): Promise<{ id: string }> {
-    console.log('Creating thread locally:', title);
-    // Tạo thread ID local
-    const id = Math.random().toString(36).substr(2, 9);
-    return { id };
+    try {
+      return await apiRequest<{ id: string }>(`${API_BASE_URL}/threads`, {
+        method: 'POST',
+        body: JSON.stringify({ title })
+      });
+    } catch (error) {
+      // Fallback: tạo local thread nếu Backend không có API
+      console.warn('Backend API not available, creating local thread:', error);
+      const id = Math.random().toString(36).substr(2, 9);
+      return { id };
+    }
   },
 
-  // Gửi message và nhận response từ AI với retry mechanism
+  // Gửi message - gọi Backend API
   async sendMessage(threadId: string, content: string, retries: number = config.API_RETRY_ATTEMPTS): Promise<{
     thread_id: string;
     user_message_id: string;
@@ -97,7 +104,7 @@ export const api = {
       usage?: any;
     };
   }> {
-    console.log('Sending message:', { threadId, content });
+    console.log('Sending message to Backend:', { threadId, content });
     
     for (let i = 0; i < retries; i++) {
       try {

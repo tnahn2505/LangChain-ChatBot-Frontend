@@ -104,10 +104,14 @@ src/
 
 ### Backend Integration
 
-The frontend expects a backend API with the following endpoints:
+This frontend is designed to work with a separate Backend API. The backend should provide:
 
 - `GET /health` - Health check
+- `POST /threads` - Create new thread
+- `GET /threads` - List all threads  
 - `POST /threads/{id}/messages` - Send message to AI
+
+**Note:** This is a Frontend-only repository. The Backend API should be implemented separately.
 
 ## 🛠️ Development
 
