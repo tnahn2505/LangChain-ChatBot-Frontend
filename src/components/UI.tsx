@@ -23,21 +23,32 @@ export default function UI(): ReactElement {
     error,
     handleCreateThread,
     handleThreadUpdate,
-    handleSelectThread
+    handleSelectThread,
+    handleRetry
   } = useAppState();
 
   // Loading state
   if (loading) {
     return (
       <div className="app">
-        <LoadingSpinner message="Loading chat..." />
+        <LoadingSpinner 
+          message="Loading chat..." 
+          variant="chat"
+          size="large"
+        />
       </div>
     );
   }
 
   // Error state
   if (error) {
-    return <ErrorScreen error={error} />;
+    return (
+      <ErrorScreen 
+        error={error} 
+        onRetry={handleRetry}
+        retryText="Try Again"
+      />
+    );
   }
 
   // Empty state
@@ -47,7 +58,13 @@ export default function UI(): ReactElement {
 
   // Loading thread state
   if (!activeThread && threads.length > 0) {
-    return <LoadingSpinner message="Loading thread..." />;
+    return (
+      <LoadingSpinner 
+        message="Loading thread..." 
+        variant="default"
+        size="medium"
+      />
+    );
   }
 
   return (

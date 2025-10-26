@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 import type { Message } from '../types';
 import { Bubble } from './Bubble';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface MessageListProps {
   messages: Message[];
@@ -25,29 +26,17 @@ export function MessageList({ messages, typing }: MessageListProps): ReactElemen
       ))}
       {typing && (
         <div style={{ 
-          color: 'var(--muted)', 
-          fontSize: '14px', 
           padding: '24px 20px',
           textAlign: 'center',
           maxWidth: '4000px',
           margin: '0 auto'
         }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            gap: '8px' 
-          }}>
-            <div style={{ 
-              width: '20px', 
-              height: '20px', 
-              border: '2px solid var(--muted)', 
-              borderTop: '2px solid var(--accent)',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-            AI is typing...
-          </div>
+          <LoadingSpinner 
+            message="AI is typing"
+            variant="minimal"
+            size="small"
+            showDots={true}
+          />
         </div>
       )}
     </div>

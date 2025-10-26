@@ -5,7 +5,7 @@ import { useThreads } from './useThreads';
 import { useToast } from './useToast';
 
 export function useAppState() {
-  const { threads, loading, error, createThread, updateThread } = useThreads();
+  const { threads, loading, error, createThread, updateThread, setError } = useThreads();
   const { showError, showSuccess } = useToast();
   const [activeId, setActiveId] = useState<string>('');
 
@@ -48,6 +48,17 @@ export function useAppState() {
     setActiveId(id);
   }, []);
 
+  const handleRetry = useCallback(async () => {
+    try {
+      setError(null);
+      // Force reload threads
+      window.location.reload();
+    } catch (err) {
+      console.error('Error during retry:', err);
+      showError("Failed to retry. Please refresh the page.");
+    }
+  }, [setError, showError]);
+
   // Auto-select first thread if none selected
   useMemo(() => {
     if (!activeId && threads.length > 0) {
@@ -67,6 +78,7 @@ export function useAppState() {
     handleCreateThread,
     handleThreadUpdate,
     handleSelectThread,
+    handleRetry,
     setActiveId
   };
 }
