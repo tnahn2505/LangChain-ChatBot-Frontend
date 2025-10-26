@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { ReactElement } from 'react';
-import type { Thread, Message } from '../types';
+import type { Thread } from '../types';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { useMessages } from '../hooks/useMessages';
-import { newId, now } from '../utils';
+import { now } from '../utils';
 import { api } from '../services/api';
 
 interface ChatContainerProps {
@@ -15,15 +15,19 @@ interface ChatContainerProps {
 }
 
 export function ChatContainer({ thread, onThreadUpdate, dark, toggleDarkMode }: ChatContainerProps): ReactElement {
-  const { messages, typing, addMessage, simulateTyping, sendMessageToAI, setMessages } = useMessages(thread.id);
+  const { messages, typing, addMessage, simulateTyping, sendMessageToAI, setMessages, loadMessages } = useMessages(thread.id);
   const [error, setError] = useState<string | null>(null);
 
   // Load messages when thread changes
   useEffect(() => {
-    if (thread.messages.length > 0) {
+    // First try to load from API
+    loadMessages();
+    
+    // Fallback to local messages if API fails
+    if (thread.messages && thread.messages.length > 0) {
       setMessages(thread.messages);
     }
-  }, [thread.id, thread.messages, setMessages]);
+  }, [thread.id, thread.messages, setMessages, loadMessages]);
 
   const handleSend = async (text: string, files?: File[]) => {
     if (!text.trim() && (!files || files.length === 0)) return;
@@ -31,16 +35,18 @@ export function ChatContainer({ thread, onThreadUpdate, dark, toggleDarkMode }: 
     try {
       setError(null);
       
-      // Add user message
-      const userMessage = await addMessage('user', text, files);
+      // Add user message (đã tự động thêm vào state)
+      await addMessage('user', text, files);
       
       // Update thread title if this is the first user message
-      const isFirstUserMessage = thread.messages.length === 1; // Only welcome message
+      // Check if thread title is still "New Chat" (default title)
+      const isFirstUserMessage = thread.title === "New Chat";
       const newTitle = isFirstUserMessage 
         ? text.slice(0, 50) + (text.length > 50 ? "..." : "") 
         : thread.title;
       
       if (isFirstUserMessage) {
+        console.log('Updating thread title from "New Chat" to:', newTitle);
         await onThreadUpdate(thread.id, { 
           title: newTitle,
           updatedAt: now()
@@ -50,12 +56,13 @@ export function ChatContainer({ thread, onThreadUpdate, dark, toggleDarkMode }: 
       // Simulate AI response
       simulateTyping(async () => {
         try {
-          // Gửi message đến AI backend
-          const assistantMessage = await sendMessageToAI(text);
+          // Gửi message đến AI backend (đã tự động thêm assistant message)
+          await sendMessageToAI(text);
           
-          // Update thread with new messages
+          // Update thread với messages hiện tại (đã được cập nhật bởi sendMessageToAI)
+          const currentMessages = await api.getMessages(thread.id);
           await onThreadUpdate(thread.id, { 
-            messages: [...messages, userMessage, assistantMessage],
+            messages: currentMessages,
             updatedAt: now()
           });
         } catch (err) {

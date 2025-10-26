@@ -22,11 +22,6 @@ export function useMessages(threadId: string) {
       
       // Optimistic update
       setMessages(prev => [...prev, newMessage]);
-
-      // Lưu messages vào localStorage
-      const currentMessages = await api.getMessages(threadId);
-      const updatedMessages = [...currentMessages, newMessage];
-      await api.saveMessages(threadId, updatedMessages);
       
       return newMessage;
     } catch (err) {
@@ -62,21 +57,11 @@ export function useMessages(threadId: string) {
       setError(null);
       const response = await api.sendMessage(threadId, content);
       
-      // Tạo assistant message từ response
-      const assistantMessage: Message = {
-        id: response.assistant_message_id,
-        role: 'assistant',
-        content: response.assistant.content,
-        createdAt: now()
-      };
-      
-      // Thêm assistant message
+      // API đã tự động lưu messages, chỉ cần reload từ API
       const currentMessages = await api.getMessages(threadId);
-      const updatedMessages = [...currentMessages, assistantMessage];
-      setMessages(updatedMessages);
-      await api.saveMessages(threadId, updatedMessages);
+      setMessages(currentMessages);
       
-      return assistantMessage;
+      return response.assistant;
     } catch (err) {
       console.error('Error sending message to AI:', err);
       setError('Failed to get AI response.');

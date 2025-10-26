@@ -2,12 +2,15 @@
 :root {
   --bg: #ffffff;
   --text: #374151;
+  --text-secondary: #6B7280;
   --muted: #6B7280;
   --card: #ffffff;
   --border: #E5E7EB;
   --accent: #10A37F;
   --accent-hover: #0E906F;
   --accent-contrast: #ffffff;
+  --primary: #10A37F;
+  --primary-hover: #0E906F;
   --sidebar-bg: #F7F7F8;
   --sidebar-width: 300px;
   --radius-sm: 4px;
@@ -25,12 +28,15 @@
 .app--dark {
   --bg: #212121;
   --text: #ECECF1;
+  --text-secondary: #8E8EA0;
   --muted: #8E8EA0;
   --card: #212121;
   --border: #4E4F60;
   --accent: #10A37F;
   --accent-hover: #0E906F;
   --accent-contrast: #ffffff;
+  --primary: #10A37F;
+  --primary-hover: #0E906F;
   --sidebar-bg: #171717;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
@@ -247,18 +253,6 @@ button {
   background-clip: content-box;
 }
 
-.sidebar__item {
-  width: 100%;
-  text-align: left;
-  padding: 12px;
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: all 0.2s ease;
-  color: var(--text);
-  margin-bottom: 2px;
-}
 .sidebar__item:hover {
   background: rgba(0,0,0,.04);
   transform: translateX(2px);
@@ -287,6 +281,114 @@ button {
 .sidebar__time {
   font-size: 12px;
   color: var(--muted);
+}
+
+/* Sidebar dropdown menu */
+.sidebar__item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar__item {
+  flex: 1;
+  width: 100%;
+  text-align: left;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.sidebar__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar__actions {
+  position: relative;
+  margin-left: 8px;
+}
+
+.sidebar__menu-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+}
+
+.sidebar__item-wrapper:hover .sidebar__menu-btn {
+  opacity: 1;
+}
+
+.sidebar__menu-btn:hover {
+  background: rgba(0,0,0,.04);
+  color: var(--text);
+}
+
+.app--dark .sidebar__menu-btn:hover {
+  background: rgba(255,255,255,.06);
+}
+
+.sidebar__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  z-index: 1000;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.app--dark .sidebar__dropdown {
+  background: var(--bg);
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+
+.sidebar__dropdown-item {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar__dropdown-item:hover {
+  background: rgba(0,0,0,.04);
+}
+
+.app--dark .sidebar__dropdown-item:hover {
+  background: rgba(255,255,255,.06);
+}
+
+.sidebar__dropdown-item--danger {
+  color: var(--error);
+}
+
+.sidebar__dropdown-item--danger:hover {
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* ---------- Chat area ---------- */
@@ -569,6 +671,13 @@ button {
 .btn:disabled {
   opacity: .5;
   cursor: not-allowed;
+}
+
+/* Send button - back to right position */
+.btn--send {
+  right: 8px !important;
+  bottom: 8px !important;
+  transform: none !important;
 }
 
 .btn:hover:not(:disabled) {

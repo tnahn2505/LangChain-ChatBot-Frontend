@@ -17,11 +17,11 @@ export function MessageList({ messages, typing }: MessageListProps): ReactElemen
       top: listRef.current.scrollHeight, 
       behavior: "smooth" 
     });
-  }, [messages.length, typing]);
+  }, [messages?.length, typing]);
 
   return (
     <div ref={listRef} className="chat__list">
-      {messages.map((message) => (
+      {messages?.map((message) => (
         <Bubble key={message.id} message={message} />
       ))}
       {typing && (

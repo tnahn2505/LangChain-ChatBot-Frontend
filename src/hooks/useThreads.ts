@@ -44,11 +44,8 @@ export function useThreads() {
         id: result.id,
         title,
         updatedAt: new Date().toISOString(),
-        messages: []
+        messages: [] // Backend sẽ tự động tạo welcome message
       };
-      
-      // Lưu thread vào localStorage
-      await api.saveThread(newThread);
       
       setThreads(prev => [newThread, ...prev]);
       return newThread;
@@ -65,14 +62,17 @@ export function useThreads() {
   const updateThread = async (threadId: string, updates: Partial<Thread>) => {
     const updatedThread = { ...updates, updatedAt: new Date().toISOString() };
     
-    // Lưu vào localStorage
-    const stored = localStorage.getItem(`thread_${threadId}`);
-    if (stored) {
-      const thread = JSON.parse(stored);
-      const updated = { ...thread, ...updatedThread };
-      await api.saveThread(updated);
+    // Nếu có title mới, gọi API để update
+    if (updates.title) {
+      try {
+        await api.updateThreadTitle(threadId, updates.title);
+      } catch (err) {
+        console.error('Error updating thread title:', err);
+        setError('Failed to update thread title.');
+      }
     }
     
+    // Cập nhật state
     setThreads(prev => 
       prev.map(thread => 
         thread.id === threadId 
@@ -84,8 +84,20 @@ export function useThreads() {
 
   const deleteThread = async (threadId: string) => {
     try {
-      // TODO: Add API call to delete thread
-      setThreads(prev => prev.filter(thread => thread.id !== threadId));
+      setError(null);
+      console.log('useThreads deleteThread called with:', threadId);
+      console.log('Current threads before delete:', threads);
+      
+      await api.deleteThread(threadId);
+      
+      console.log('API delete successful, updating threads state');
+      setThreads(prev => {
+        const filtered = prev.filter(thread => thread.id !== threadId);
+        console.log('Threads after filter:', filtered);
+        return filtered;
+      });
+      
+      console.log('Threads state updated');
     } catch (err) {
       console.error('Error deleting thread:', err);
       setError('Failed to delete thread.');

@@ -15,7 +15,7 @@ export function Bubble({ message }: BubbleProps): ReactElement {
       </div>
       <div className="bubble__content">
         {message.content}
-        {message.files && message.files.length > 0 && (
+        {message.files && message.files?.length > 0 && (
           <div className="bubble__files">
             {message.files.map((file, index) => (
               <div key={index} className="bubble__file">

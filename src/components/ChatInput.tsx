@@ -13,8 +13,8 @@ export function ChatInput({ onSend, disabled }: ChatInputProps): ReactElement {
 
   const send = () => {
     const v = text.trim();
-    if ((!v && selectedFiles.length === 0) || disabled) return;
-    const messageText = v || (selectedFiles.length > 0 ? `Đã gửi ${selectedFiles.length} tệp` : "");
+    if ((!v && selectedFiles?.length === 0) || disabled) return;
+    const messageText = v || (selectedFiles?.length > 0 ? `Đã gửi ${selectedFiles.length} tệp` : "");
     setText("");
     setSelectedFiles([]);
     onSend(messageText, selectedFiles);
@@ -35,7 +35,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps): ReactElement {
 
   return (
     <div className="composer">
-      {selectedFiles.length > 0 && (
+      {selectedFiles?.length > 0 && (
         <div className="composer__files">
           {selectedFiles.map((file, index) => (
             <div key={index} className="composer__file-item">
@@ -87,7 +87,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps): ReactElement {
           <button
             onClick={send}
             disabled={disabled}
-            className="btn"
+            className="btn btn--send"
             aria-label="Send message"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

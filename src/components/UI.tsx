@@ -24,6 +24,8 @@ export default function UI(): ReactElement {
     handleCreateThread,
     handleThreadUpdate,
     handleSelectThread,
+    handleDeleteThread,
+    handleRenameThread,
     handleRetry
   } = useAppState();
 
@@ -52,12 +54,12 @@ export default function UI(): ReactElement {
   }
 
   // Empty state
-  if (!activeThread && threads.length === 0) {
+  if (!activeThread && threads && threads.length === 0) {
     return <EmptyState onCreateThread={handleCreateThread} />;
   }
 
   // Loading thread state
-  if (!activeThread && threads.length > 0) {
+  if (!activeThread && threads && threads.length > 0) {
     return (
       <LoadingSpinner 
         message="Loading thread..." 
@@ -74,7 +76,9 @@ export default function UI(): ReactElement {
           threads={threads} 
           activeId={activeId} 
           onCreate={handleCreateThread} 
-          onSelect={handleSelectThread} 
+          onSelect={handleSelectThread}
+          onDelete={handleDeleteThread}
+          onRename={handleRenameThread}
         />
           
         {activeThread && (

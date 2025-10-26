@@ -133,70 +133,35 @@ export const api = {
     throw new ApiError('Failed to send message after retries');
   },
 
-  // Lấy messages của thread (local storage - backend không có API này)
+  // Lấy messages của thread từ Backend API
   async getMessages(threadId: string): Promise<Message[]> {
-    // Lấy từ localStorage
-    const stored = localStorage.getItem(`thread_${threadId}_messages`);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-    return [];
+    console.log('Loading messages from Backend API for thread:', threadId);
+    return await apiRequest<Message[]>(`${API_BASE_URL}/threads/${threadId}/messages`);
   },
 
-  // Lưu messages vào localStorage
-  async saveMessages(threadId: string, messages: Message[]): Promise<void> {
-    localStorage.setItem(`thread_${threadId}_messages`, JSON.stringify(messages));
-  },
-
-  // Cập nhật tên thread (local only)
+  // Cập nhật tên thread - gọi Backend API
   async updateThreadTitle(threadId: string, title: string): Promise<{ ok: boolean }> {
-    console.log('Updating thread title locally:', { threadId, title });
-    // Lưu vào localStorage
-    const stored = localStorage.getItem(`thread_${threadId}`);
-    if (stored) {
-      const thread = JSON.parse(stored);
-      thread.title = title;
-      thread.updatedAt = new Date().toISOString();
-      localStorage.setItem(`thread_${threadId}`, JSON.stringify(thread));
-    }
-    return { ok: true };
+    console.log('Updating thread title via API:', { threadId, title });
+    const response = await apiRequest<{ ok: boolean }>(`${API_BASE_URL}/threads/${threadId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ title })
+    });
+    return response;
   },
 
-  // Lấy tất cả threads từ localStorage
+  // Lấy tất cả threads từ Backend API
   async getAllThreads(): Promise<Thread[]> {
-    try {
-      console.log('Loading threads from localStorage...');
-      
-      const threads: Thread[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('thread_') && !key.includes('_messages')) {
-          const threadId = key.replace('thread_', '');
-          const stored = localStorage.getItem(key);
-          if (stored) {
-            const thread = JSON.parse(stored);
-            const messages = await this.getMessages(threadId);
-            threads.push({
-              ...thread,
-              messages
-            });
-          }
-        }
-      }
-      
-      // Sắp xếp theo updatedAt
-      threads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-      
-      console.log('Threads loaded:', threads);
-      return threads;
-    } catch (error) {
-      console.error('Error loading threads:', error);
-      return [];
-    }
+    console.log('Loading threads from Backend API...');
+    return await apiRequest<Thread[]>(`${API_BASE_URL}/threads`);
   },
 
-  // Lưu thread vào localStorage
-  async saveThread(thread: Thread): Promise<void> {
-    localStorage.setItem(`thread_${thread.id}`, JSON.stringify(thread));
+  // Xóa thread - gọi Backend API
+  async deleteThread(threadId: string): Promise<{ ok: boolean }> {
+    console.log('API deleteThread called with:', threadId);
+    const response = await apiRequest<{ ok: boolean }>(`${API_BASE_URL}/threads/${threadId}`, {
+      method: 'DELETE'
+    });
+    console.log('API deleteThread response:', response);
+    return response;
   }
 };
