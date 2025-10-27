@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { Message } from '../types';
+import type { Message, SendMessageRequest } from '../types';
 import { api } from '../services/api';
 import { newId, now } from '../utils';
 
@@ -31,7 +31,7 @@ export function useMessages(threadId: string) {
       setMessages(prev => prev.filter(msg => msg.id !== newMessage.id));
       throw err;
     }
-  }, [threadId, messages]);
+  }, []);
 
   const simulateTyping = useCallback((callback: () => void, delay: number = 600) => {
     setTyping(true);
@@ -43,23 +43,39 @@ export function useMessages(threadId: string) {
 
   const loadMessages = useCallback(async () => {
     try {
+      console.log('useMessages: Loading messages for threadId:', threadId);
       setError(null);
       const loadedMessages = await api.getMessages(threadId);
-      setMessages(loadedMessages);
+      console.log('useMessages: Loaded messages from API:', loadedMessages);
+      
+      // Ensure we have an array
+      if (Array.isArray(loadedMessages)) {
+        setMessages(loadedMessages);
+      } else {
+        console.warn('useMessages: API returned non-array response:', loadedMessages);
+        setMessages([]);
+      }
     } catch (err) {
-      console.error('Error loading messages:', err);
+      console.error('useMessages: Error loading messages:', err);
       setError('Failed to load messages.');
+      // Don't clear messages on error, keep existing ones
     }
   }, [threadId]);
 
-  const sendMessageToAI = useCallback(async (content: string) => {
+  const sendMessageToAI = useCallback(async (request: SendMessageRequest) => {
     try {
       setError(null);
-      const response = await api.sendMessage(threadId, content);
+      const response = await api.sendMessage(threadId, request);
       
-      // API đã tự động lưu messages, chỉ cần reload từ API
-      const currentMessages = await api.getMessages(threadId);
-      setMessages(currentMessages);
+      // Thêm assistant message vào state thay vì reload toàn bộ
+      const assistantMessage: Message = {
+        id: response.assistant_message_id,
+        role: 'assistant',
+        content: response.assistant.content,
+        createdAt: now()
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
       
       return response.assistant;
     } catch (err) {
@@ -67,7 +83,7 @@ export function useMessages(threadId: string) {
       setError('Failed to get AI response.');
       throw err;
     }
-  }, [threadId, messages]);
+  }, [threadId]);
 
   const clearError = useCallback(() => {
     setError(null);

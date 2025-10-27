@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 import type { Thread } from '../types';
+import { RenameDialog } from './RenameDialog';
 
 interface SidebarProps {
   threads: Thread[];
@@ -21,6 +22,11 @@ export function Sidebar({
 }: SidebarProps): ReactElement {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState<string | null>(null);
+  const [renameDialog, setRenameDialog] = useState<{ isOpen: boolean; threadId: string; currentTitle: string }>({
+    isOpen: false,
+    threadId: '',
+    currentTitle: ''
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   console.log('Sidebar rendered with onDelete:', !!onDelete);
@@ -88,8 +94,12 @@ export function Sidebar({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log('3-dot button clicked for thread:', t.id);
+                    console.log('=== 3-DOT BUTTON CLICKED ===');
+                    console.log('Thread ID:', t.id);
+                    console.log('Current showDropdown:', showDropdown);
+                    console.log('Setting showDropdown to:', showDropdown === t.id ? null : t.id);
                     setShowDropdown(showDropdown === t.id ? null : t.id);
+                    console.log('=== 3-DOT BUTTON CLICKED END ===');
                   }}
                   className="sidebar__menu-btn"
                 >
@@ -102,22 +112,38 @@ export function Sidebar({
                 
                 {showDropdown === t.id && (
                   <div className="sidebar__dropdown">
+                    {console.log('=== DROPDOWN SHOWING ===')}
                     {console.log('Dropdown showing for thread:', t.id)}
+                    {console.log('Dropdown visible:', true)}
+                    {console.log('=== DROPDOWN SHOWING END ===')}
                     
                     {/* Rename Button */}
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        console.log('=== RENAME BUTTON CLICKED ===');
                         console.log('Rename button clicked for thread:', t.id);
-                        const newTitle = prompt('Enter new thread title:', t.title);
-                        if (newTitle && newTitle.trim() && newTitle !== t.title) {
-                          console.log('Renaming thread to:', newTitle);
-                          if (onRename) {
-                            onRename(t.id, newTitle.trim());
-                          }
-                        }
-                        setShowDropdown(null);
+                        console.log('onRename function:', onRename);
+                        console.log('onRename type:', typeof onRename);
+                        setRenameDialog({
+                          isOpen: true,
+                          threadId: t.id,
+                          currentTitle: t.title
+                        });
+                        // Tạm thời bỏ setShowDropdown(null) để debug
+                        // setShowDropdown(null);
+                        console.log('=== RENAME BUTTON CLICKED END ===');
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        console.log('=== RENAME BUTTON MOUSE DOWN ===');
+                        console.log('Mouse down on rename button for thread:', t.id);
+                      }}
+                      onMouseUp={(e) => {
+                        e.stopPropagation();
+                        console.log('=== RENAME BUTTON MOUSE UP ===');
+                        console.log('Mouse up on rename button for thread:', t.id);
                       }}
                       className="sidebar__dropdown-item"
                       style={{ 
@@ -143,12 +169,30 @@ export function Sidebar({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        console.log('=== DELETE BUTTON CLICKED ===');
                         console.log('Delete button clicked for thread:', t.id);
                         console.log('onDelete function:', onDelete);
+                        console.log('onDelete type:', typeof onDelete);
                         if (onDelete) {
+                          console.log('Calling onDelete with threadId:', t.id);
                           onDelete(t.id);
+                          console.log('onDelete called successfully');
+                        } else {
+                          console.log('onDelete is null/undefined, not calling');
                         }
-                        setShowDropdown(null);
+                        // Tạm thời bỏ setShowDropdown(null) để debug
+                        // setShowDropdown(null);
+                        console.log('=== DELETE BUTTON CLICKED END ===');
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        console.log('=== DELETE BUTTON MOUSE DOWN ===');
+                        console.log('Mouse down on delete button for thread:', t.id);
+                      }}
+                      onMouseUp={(e) => {
+                        e.stopPropagation();
+                        console.log('=== DELETE BUTTON MOUSE UP ===');
+                        console.log('Mouse up on delete button for thread:', t.id);
                       }}
                       className="sidebar__dropdown-item sidebar__dropdown-item--danger"
                       style={{ 
@@ -158,7 +202,9 @@ export function Sidebar({
                         border: 'none',
                         cursor: 'pointer',
                         width: '100%',
-                        textAlign: 'left'
+                        textAlign: 'left',
+                        zIndex: 10001,
+                        position: 'relative'
                       }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -176,6 +222,20 @@ export function Sidebar({
           </div>
         ))}
       </div>
+      
+      <RenameDialog
+        isOpen={renameDialog.isOpen}
+        currentTitle={renameDialog.currentTitle}
+        onConfirm={(newTitle) => {
+          if (onRename) {
+            onRename(renameDialog.threadId, newTitle);
+          }
+          setRenameDialog({ isOpen: false, threadId: '', currentTitle: '' });
+        }}
+        onCancel={() => {
+          setRenameDialog({ isOpen: false, threadId: '', currentTitle: '' });
+        }}
+      />
     </aside>
   );
 }

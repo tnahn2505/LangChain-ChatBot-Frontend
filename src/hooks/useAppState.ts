@@ -16,29 +16,18 @@ export function useAppState() {
 
   const handleCreateThread = useCallback(async () => {
     try {
+      console.log('useAppState: Creating new thread');
       const newThread = await createThread("New Chat");
+      console.log('useAppState: Created thread:', newThread);
       
-      // Create welcome message
-      const welcomeMessage: Message = {
-        id: newId(),
-        role: "assistant",
-        content: "Xin chào 👋\nMình là AI Assistant. Hãy hỏi mình điều gì đó!",
-        createdAt: now()
-      };
-      
-      // Update thread with welcome message
-      updateThread(newThread.id, { 
-        messages: [welcomeMessage],
-        updatedAt: now()
-      });
-      
+      // Backend đã tự động tạo welcome message, không cần tạo ở frontend
       setActiveId(newThread.id);
       showSuccess("New chat created successfully!");
     } catch (err) {
       console.error('Error creating thread:', err);
       showError("Failed to create new chat. Please try again.");
     }
-  }, [createThread, updateThread, showSuccess, showError]);
+  }, [createThread, showSuccess, showError]);
 
   const handleThreadUpdate = useCallback(async (threadId: string, updates: Partial<Thread>) => {
     await updateThread(threadId, updates);

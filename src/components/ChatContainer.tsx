@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ReactElement } from 'react';
-import type { Thread } from '../types';
+import type { Thread, CreateThreadRequest, SendMessageRequest, UpdateThreadRequest } from '../types';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { useMessages } from '../hooks/useMessages';
@@ -20,14 +20,18 @@ export function ChatContainer({ thread, onThreadUpdate, dark, toggleDarkMode }: 
 
   // Load messages when thread changes
   useEffect(() => {
+    console.log('ChatContainer: Loading messages for thread:', thread.id);
+    console.log('ChatContainer: Thread messages:', thread.messages);
+    
     // First try to load from API
     loadMessages();
     
     // Fallback to local messages if API fails
     if (thread.messages && thread.messages.length > 0) {
+      console.log('ChatContainer: Setting local messages:', thread.messages);
       setMessages(thread.messages);
     }
-  }, [thread.id, thread.messages, setMessages, loadMessages]);
+  }, [thread.id, loadMessages, setMessages]);
 
   const handleSend = async (text: string, files?: File[]) => {
     if (!text.trim() && (!files || files.length === 0)) return;
@@ -57,13 +61,20 @@ export function ChatContainer({ thread, onThreadUpdate, dark, toggleDarkMode }: 
       simulateTyping(async () => {
         try {
           // Gửi message đến AI backend (đã tự động thêm assistant message)
-          await sendMessageToAI(text);
+          const sendRequest: SendMessageRequest = {
+            content: text,
+            metadata: {}
+          };
+          await sendMessageToAI(sendRequest);
           
-          // Update thread với messages hiện tại (đã được cập nhật bởi sendMessageToAI)
-          const currentMessages = await api.getMessages(thread.id);
-          await onThreadUpdate(thread.id, { 
-            messages: currentMessages,
-            updatedAt: now()
+          // Update thread với messages hiện tại từ state
+          // Sử dụng callback để đảm bảo có state mới nhất
+          setMessages(currentMessages => {
+            onThreadUpdate(thread.id, { 
+              messages: currentMessages,
+              updatedAt: now()
+            });
+            return currentMessages;
           });
         } catch (err) {
           console.error('Error sending message:', err);

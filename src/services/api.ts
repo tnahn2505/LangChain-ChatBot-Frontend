@@ -1,5 +1,18 @@
 // Frontend API Client - chỉ gọi Backend APIs
 import { config } from '../config/environment';
+import type {
+  HealthCheckResponse,
+  CreateThreadRequest,
+  CreateThreadResponse,
+  SendMessageRequest,
+  SendMessageResponse,
+  UpdateThreadRequest,
+  UpdateThreadResponse,
+  DeleteThreadResponse,
+  ApiErrorResponse,
+  Message,
+  Thread
+} from '../types';
 
 const API_BASE_URL = config.API_BASE_URL;
 
@@ -7,12 +20,14 @@ const API_BASE_URL = config.API_BASE_URL;
 export class ApiError extends Error {
   public status?: number;
   public response?: Response;
+  public details?: ApiErrorResponse;
 
-  constructor(message: string, status?: number, response?: Response) {
+  constructor(message: string, status?: number, response?: Response, details?: ApiErrorResponse) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.response = response;
+    this.details = details;
   }
 }
 
@@ -31,11 +46,19 @@ async function apiRequest<T>(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorDetails: ApiErrorResponse | undefined;
+      try {
+        errorDetails = await response.json();
+      } catch {
+        // If response is not JSON, use text
+      }
+      
+      const errorText = errorDetails?.message || await response.text() || response.statusText;
       throw new ApiError(
-        `HTTP ${response.status}: ${errorText || response.statusText}`,
+        `HTTP ${response.status}: ${errorText}`,
         response.status,
-        response
+        response,
+        errorDetails
       );
     }
 
@@ -48,28 +71,13 @@ async function apiRequest<T>(
   }
 }
 
-export interface Thread {
-  id: string;
-  title: string;
-  updatedAt: string;
-  messages: Message[];
-}
-
-export interface Message {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  createdAt: string;
-  files?: File[];
-}
-
 // Frontend API Client - chỉ gọi Backend APIs
 export const api = {
   // Health check - gọi Backend API
-  async health(retries: number = config.API_RETRY_ATTEMPTS): Promise<{ ok: boolean }> {
+  async health(retries: number = config.API_RETRY_ATTEMPTS): Promise<HealthCheckResponse> {
     for (let i = 0; i < retries; i++) {
       try {
-        return await apiRequest<{ ok: boolean }>(`${API_BASE_URL}/health`);
+        return await apiRequest<HealthCheckResponse>(`${API_BASE_URL}/health`);
       } catch (error) {
         if (i === retries - 1) throw error;
         await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
@@ -79,50 +87,37 @@ export const api = {
   },
 
   // Tạo thread mới - gọi Backend API
-  async createThread(title: string): Promise<{ id: string }> {
+  async createThread(request: CreateThreadRequest): Promise<CreateThreadResponse> {
     try {
-      return await apiRequest<{ id: string }>(`${API_BASE_URL}/threads`, {
+      return await apiRequest<CreateThreadResponse>(`${API_BASE_URL}/threads`, {
         method: 'POST',
-        body: JSON.stringify({ title })
+        body: JSON.stringify(request)
       });
     } catch (error) {
       // Fallback: tạo local thread nếu Backend không có API
       console.warn('Backend API not available, creating local thread:', error);
       const id = Math.random().toString(36).substr(2, 9);
-      return { id };
+      return { 
+        id, 
+        title: request.title,
+        createdAt: new Date().toISOString()
+      };
     }
   },
 
   // Gửi message - gọi Backend API
-  async sendMessage(threadId: string, content: string, retries: number = config.API_RETRY_ATTEMPTS): Promise<{
-    thread_id: string;
-    user_message_id: string;
-    assistant_message_id: string;
-    assistant: {
-      content: string;
-      model?: string;
-      usage?: any;
-    };
-  }> {
-    console.log('Sending message to Backend:', { threadId, content });
+  async sendMessage(
+    threadId: string, 
+    request: SendMessageRequest, 
+    retries: number = config.API_RETRY_ATTEMPTS
+  ): Promise<SendMessageResponse> {
+    console.log('Sending message to Backend:', { threadId, request });
     
     for (let i = 0; i < retries; i++) {
       try {
-        return await apiRequest<{
-          thread_id: string;
-          user_message_id: string;
-          assistant_message_id: string;
-          assistant: {
-            content: string;
-            model?: string;
-            usage?: any;
-          };
-        }>(`${API_BASE_URL}/threads/${threadId}/messages`, {
+        return await apiRequest<SendMessageResponse>(`${API_BASE_URL}/threads/${threadId}/messages`, {
           method: 'POST',
-          body: JSON.stringify({ 
-            content,
-            metadata: {}
-          }),
+          body: JSON.stringify(request),
         });
       } catch (error) {
         if (i === retries - 1) throw error;
@@ -136,32 +131,48 @@ export const api = {
   // Lấy messages của thread từ Backend API
   async getMessages(threadId: string): Promise<Message[]> {
     console.log('Loading messages from Backend API for thread:', threadId);
-    return await apiRequest<Message[]>(`${API_BASE_URL}/threads/${threadId}/messages`);
+    const response = await apiRequest<Message[]>(`${API_BASE_URL}/threads/${threadId}/messages`);
+    return response;
   },
 
   // Cập nhật tên thread - gọi Backend API
-  async updateThreadTitle(threadId: string, title: string): Promise<{ ok: boolean }> {
-    console.log('Updating thread title via API:', { threadId, title });
-    const response = await apiRequest<{ ok: boolean }>(`${API_BASE_URL}/threads/${threadId}`, {
+  async updateThreadTitle(threadId: string, request: UpdateThreadRequest): Promise<UpdateThreadResponse> {
+    console.log('Updating thread title via API:', { threadId, request });
+    return await apiRequest<UpdateThreadResponse>(`${API_BASE_URL}/threads/${threadId}`, {
       method: 'PUT',
-      body: JSON.stringify({ title })
+      body: JSON.stringify(request)
     });
-    return response;
   },
 
   // Lấy tất cả threads từ Backend API
   async getAllThreads(): Promise<Thread[]> {
     console.log('Loading threads from Backend API...');
-    return await apiRequest<Thread[]>(`${API_BASE_URL}/threads`);
+    const response = await apiRequest<Thread[]>(`${API_BASE_URL}/threads`);
+    return response;
   },
 
   // Xóa thread - gọi Backend API
-  async deleteThread(threadId: string): Promise<{ ok: boolean }> {
+  async deleteThread(threadId: string): Promise<DeleteThreadResponse> {
+    console.log('=== API DELETE THREAD DEBUG ===');
     console.log('API deleteThread called with:', threadId);
-    const response = await apiRequest<{ ok: boolean }>(`${API_BASE_URL}/threads/${threadId}`, {
-      method: 'DELETE'
-    });
-    console.log('API deleteThread response:', response);
-    return response;
+    console.log('Thread ID type:', typeof threadId);
+    console.log('API URL:', `${API_BASE_URL}/threads/${threadId}`);
+    
+    try {
+      const response = await apiRequest<DeleteThreadResponse>(`${API_BASE_URL}/threads/${threadId}`, {
+        method: 'DELETE'
+      });
+      console.log('API deleteThread response:', response);
+      console.log('=== API DELETE THREAD SUCCESS ===');
+      return response;
+    } catch (error) {
+      console.error('=== API DELETE THREAD ERROR ===');
+      console.error('API delete error:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw error;
+    }
   }
 };

@@ -53,11 +53,6 @@ export default function UI(): ReactElement {
     );
   }
 
-  // Empty state
-  if (!activeThread && threads && threads.length === 0) {
-    return <EmptyState onCreateThread={handleCreateThread} />;
-  }
-
   // Loading thread state
   if (!activeThread && threads && threads.length > 0) {
     return (
@@ -80,14 +75,16 @@ export default function UI(): ReactElement {
           onDelete={handleDeleteThread}
           onRename={handleRenameThread}
         />
-          
-        {activeThread && (
+        
+        {activeThread ? (
           <ChatContainer 
             thread={activeThread}
             onThreadUpdate={handleThreadUpdate}
             dark={dark}
             toggleDarkMode={toggleDarkMode}
           />
+        ) : (
+          <EmptyState onCreateThread={handleCreateThread} />
         )}
         
         <ToastContainer toasts={toasts} onRemove={removeToast} />
